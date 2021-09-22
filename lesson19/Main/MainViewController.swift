@@ -11,13 +11,21 @@ import UIKit
 
 // MARK: View -
 protocol MainViewProtocol: AnyObject {
-    func updateTableView()
+    func addElementToTableView(to indexPath: IndexPath)
+    func removeElementToTableView(to indexPath: IndexPath)
 }
 
+
 class MainViewController: UIViewController, MainViewProtocol {
-//     обновление таблицы
-    func updateTableView() {
-        tableView.reloadData()
+//    удаления ячейки таблицы
+    func removeElementToTableView(to indexPath: IndexPath) {
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+    }
+    
+    //     обновление таблицы
+    func addElementToTableView(to indexPath: IndexPath) {
+//        анимированное добавление ячеек
+        tableView.insertRows(at: [indexPath], with: .automatic)
     }
     
     
@@ -31,6 +39,10 @@ class MainViewController: UIViewController, MainViewProtocol {
         presenter.view = self
         presenter.viewDidLoad()
         
+//        регистрация ячейки из XIB файла
+        tableView.register(UINib(nibName: "MainTableViewCell", bundle: Bundle.main),
+                           forCellReuseIdentifier: "MainTableViewCell")
+        
 //        инициализация таблицы
 //        tableView.delegate = self
 //        tableView.dataSource = self
@@ -42,9 +54,33 @@ class MainViewController: UIViewController, MainViewProtocol {
 
 }
 
-//extension MainViewController: UITableViewDelegate {
-//
-//}
+extension MainViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let configuration = UISwipeActionsConfiguration(actions: [
+            UIContextualAction(
+                style: .destructive,
+                title: "Delete",
+                handler: { _, _, _ in
+                    self.presenter.removeText(for: indexPath)
+                }
+            ),
+//            UIContextualAction(
+//                style: .normal,
+//                title: "Normal",
+//                handler: { _, _, _ in
+//                    print(indexPath)
+//                }
+//            )
+        ]
+        )
+        return configuration
+    }
+    
+//    отслеживание нажатия на ячейку (переходы и т.д)
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print("3")
+    }
+}
 
 
 
@@ -55,9 +91,10 @@ extension MainViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
+//        XIB файл
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "MainTableViewCell", for: indexPath) as? MainTableViewCell else { return UITableViewCell()}
         //            из indexPath получаем номер секции и номер ряда
-        cell.textLabel?.text = presenter.elementInTextArray(for: indexPath)
+        cell.update(with: presenter.elementInTextArray(for: indexPath))
         return cell
     }
     
@@ -65,6 +102,8 @@ extension MainViewController: UITableViewDataSource {
     
     
     
+    
+//    ////////////////////////////////////////////////////////////////////////////////////////////
     
     
     
